@@ -25,7 +25,18 @@ const byte EVENEMENT_PRESSE = 1;
 const byte EVENEMENT_RELACHE = 2;
 
 
-
+bool endOfSong(){
+    int a=mp3.read();
+    bool res = (a !=-1);
+    if(res){
+        Serial.println("end of song ");
+        Serial.println(a);
+        for(int i = 0; i < 10; ++i){
+            int a=mp3.read();
+        }
+    }
+    return res;
+}
 
 
 int lirePoussoirs()
@@ -88,23 +99,31 @@ void inde(){
     analogWrite(BLUEPIN, 0);
     analogWrite(GREENPIN,0); 
 
+    SpecifyMusicPlay(1);
+    bool play = true;
     // fade from red to yellow
-    for (int g = 0; g < 256; g++) { 
-        analogWrite(GREENPIN, g);
-        delay(FADESPEED);
-    }
-    for( int i=0; i<nbrepet;i++){
-
-
-        // fade from red to yellow
-        for (int r = 0 ; r <150 ; r++) { 
-            analogWrite(REDPIN, r);
+    while(play){
+        for (int g = 0; g < 256; g++) { 
+            analogWrite(GREENPIN, g);
             delay(FADESPEED);
         }
-        for (int r = 150 ; r >0; r--) { 
-            analogWrite(REDPIN, r);
-            delay(FADESPEED);
+        play = play && !endOfSong(); if(!play){ break; }
+        for( int i=0; i<nbrepet;i++){
+
+
+            // fade from red to yellow
+            for (int r = 0 ; r <150 ; r++) { 
+                analogWrite(REDPIN, r);
+                delay(FADESPEED);
+                play = play && !endOfSong(); if(!play){ break; }
+            }
+            for (int r = 150 ; r >0; r--) { 
+                analogWrite(REDPIN, r);
+                delay(FADESPEED);
+                play = play && !endOfSong(); if(!play){ break; }
+            }
         }
+        play = play && !endOfSong(); if(!play){ break; }
     }
     analogWrite(REDPIN, 0);
     analogWrite(BLUEPIN, 0);
@@ -122,19 +141,24 @@ void belgique(){
     analogWrite(REDPIN, 200);
     delay(500);
 
-    for( int i=0; i<nbrepet;i++){
+    SpecifyMusicPlay(2);
+    bool play = true;
+    while(play){
         for (int g = 256; g >0; g--) { 
             analogWrite(GREENPIN, g);
             delay(FADESPEED);
         }
+        play = play && !endOfSong(); if(!play){ break; }
         for (int r = 200; r<256; r++) { 
             analogWrite(REDPIN, r);
             delay(FADESPEED);
         }
+        play = play && !endOfSong(); if(!play){ break; }
         for (int r = 256; r>200; r--) { 
             analogWrite(REDPIN, r);
             delay(FADESPEED);
         }
+        play = play && !endOfSong(); if(!play){ break; }
         for (int g = 0; g < 256; g++) { 
             analogWrite(GREENPIN, g);
             delay(FADESPEED);
@@ -146,7 +170,6 @@ void belgique(){
     Serial.println("finbelgique");
 }
 
-
 void angleterre(){
     Serial.println("angleterre");
     analogWrite(REDPIN, 0);
@@ -154,9 +177,8 @@ void angleterre(){
     analogWrite(GREENPIN,0); 
     analogWrite(WHITEPIN,0); 
     SpecifyMusicPlay(4);
-    int a=mp3.read();
-    for(int i= 0;i<39;i++){
-
+    bool play = true;
+    while(play){
         analogWrite(REDPIN, 255);
         analogWrite(BLUEPIN, 0);
         delay(125);
@@ -167,6 +189,7 @@ void angleterre(){
         analogWrite(GREENPIN,255); 
         analogWrite(WHITEPIN,255); 
         delay(125);
+        play = play && !endOfSong(); if(!play){ break; }
         analogWrite(WHITEPIN,0); 
         analogWrite(REDPIN, 0);
         analogWrite(BLUEPIN, 0);
@@ -178,6 +201,7 @@ void angleterre(){
         delay(125);
         analogWrite(BLUEPIN, 0);
         delay(75);
+        play = play && !endOfSong(); if(!play){ break; }
     }
     delay(1000);
     analogWrite(REDPIN, 125);
@@ -323,4 +347,71 @@ void loop(){
     }
 
     delay(3);
+}
+
+
+
+
+
+void setup2()
+{
+    mp3.begin(9600);
+    Serial.begin(9600); 
+    delay(100);
+
+    SelectPlayerDevice(0x02);       // Select SD card as the player device.
+    SetVolume(0x0E);                // Set the volume, the range is 0x00 to 0x1E.
+}
+
+void loop2()
+{
+    char recvChar = 0;
+    while(Serial.available())
+    {
+        recvChar = Serial.read();
+    }
+    Serial.print("Send: ");
+    Serial.println( recvChar );
+
+    switch (recvChar)
+    {
+        case '1':
+            SpecifyMusicPlay(1);
+            Serial.println("Specify the music index to play");
+            break;
+        case '2':
+            PlayPause();
+            Serial.println("Pause the MP3 player");
+            break;
+        case '3':
+            PlayResume();
+            Serial.println("Resume the MP3 player");
+            break;
+        case '4':
+            PlayNext();
+            Serial.println("Play the next song");
+            break;
+        case '5':
+            PlayPrevious();
+            Serial.println("Play the previous song");
+            break;
+        case '6':
+            PlayLoop();
+            Serial.println("Play loop for all the songs");
+            break;
+        case '7':
+            IncreaseVolume();
+            Serial.println("Increase volume");
+            break;
+        case '8':
+            DecreaseVolume();
+            Serial.println("Decrease volume");
+            break;
+        default:
+            break;
+    }
+
+    delay(1000);
+
+    printReturnedData();
 }

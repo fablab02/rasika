@@ -300,13 +300,13 @@ uint8_t QueryPlayStatus(void)
     {
         c[i] = mp3.read();
         i++;
-		delay(1);
-		if (i == 10) break;
-//        Serial.print(" 0x");
-//        Serial.print(c[i], HEX);
+        delay(1);
+        if (i == 10) break;
+        //        Serial.print(" 0x");
+        //        Serial.print(c[i], HEX);
     }
-//    Serial.println(" "); 
-    
+    //    Serial.println(" "); 
+
     if(c[3] == 0x3C || c[3] == 0x3D || c[3] == 0x3E)
     {
         return 0;
